@@ -5,7 +5,12 @@ describe Placewise::Api do
     expect(Placewise::Api::VERSION).not_to be nil
   end
 
-  it 'does something useful' do
-    expect(false).to eq(true)
+  it 'can be configured' do
+    Placewise::Api.configure do |config|
+      config.email    = 'test@email.com'
+      config.password = 'asdfasdfasdf'
+    end
+
+    expect(Placewise::Api.client).to_not be nil
   end
 end
