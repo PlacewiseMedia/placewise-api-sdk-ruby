@@ -1,11 +1,8 @@
 require "placewise/api/version"
+require "placewise/api/client"
 
 module Placewise
   module Api
-    class << self
-      attr_accessor :configuration
-    end
-
     class Configuration
       attr_accessor :api_key, :email, :password, :base_url
 
@@ -18,8 +15,21 @@ module Placewise
     end
 
     def self.configure
-      self.configuration ||= Configuration.new
+      @configuration ||= Configuration.new
       yield configuration
+    end
+
+    class << self
+      attr_accessor :configuration
+
+      def client
+        @client ||= Client.new(
+          configuration.email,
+          configuration.password,
+          configuration.base_url
+        )
+      end
+      
     end
   end
 end
