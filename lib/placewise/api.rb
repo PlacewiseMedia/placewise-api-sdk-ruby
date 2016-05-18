@@ -29,7 +29,10 @@ module Placewise
           configuration.base_url
         )
       end
-      
+
+      def repo
+        @repo ||= Hash.new { |h, k| h[k] = [] }
+      end
     end
   end
 end
