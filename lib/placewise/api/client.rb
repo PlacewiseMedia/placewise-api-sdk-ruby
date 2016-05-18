@@ -23,21 +23,36 @@ module Placewise
         @auth_token = data['attributes']['authentication_token']
       end
 
-      def get(resource, id = nil)
+      def get(resource, id = nil, params: { page: { size: 3 }, include: 'stores' })
         login unless @auth_id
-        url_for(resource)
+        unpack Typhoeus.get(url_for(resource), headers: { 'Accept' => 'application/vnd.api+json' }, params: sign(params))
       end
 
       private
 
       def url_for(path, id = nil)
-        sign "#{@base_url}/#{path}#{"/#{id}" if id}"
+        "#{@base_url}/#{path}#{"/#{id}" if id}"
       end
 
-      def sign(url)
+      def sign(params)
         timestamp = Time.now.to_i
-        token = Digest::MD5.hexdigest("#{timestamp}:#{@auth_token}")
-        "#{url}?auth_id=#{@auth_id}&auth_token=#{token}&timestamp=#{timestamp}"
+        params.merge({
+          auth_id:        @auth_id,
+          auth_token:     Digest::MD5.hexdigest("#{timestamp}:#{@auth_token}"),
+          auth_timestamp: timestamp
+        })
+      end
+
+      def unpack(response)
+        if response.success?
+          json     = JSON.parse(response.response_body)
+          data     = json['data']
+          included = json['included']
+          data.each { |d| Placewise::Api.repo[d['type'].to_sym] << model_for(d['type']).new(d) }
+          included.each { |d| Placewise::Api.repo[d['type'].to_sym] << model_for(d['type']).new(d) }
+        else
+          fail "Something failed..."
+        end
       end
     end
   end
