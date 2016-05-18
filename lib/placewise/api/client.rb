@@ -43,6 +43,19 @@ module Placewise
         })
       end
 
+      def model_for(type)
+        type.capitalize!
+        if Placewise::Api.const_defined?(type)
+          Placewise::Api.const_get(type)
+        else
+          Placewise::Api.const_set(type, Struct.new(:id, :type, :attributes, :links, :relationships)) do
+            def attributes
+              attributes ||= {}
+            end
+          end
+        end
+      end
+
       def unpack(response)
         if response.success?
           json     = JSON.parse(response.response_body)
