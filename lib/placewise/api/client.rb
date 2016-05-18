@@ -1,3 +1,6 @@
+require 'typhoeus'
+require 'json'
+
 module Placewise
   module Api
     class Client
@@ -7,8 +10,17 @@ module Placewise
       end
 
       def login
-        # TODO!!
-        @auth_id, @auth_token = 'foo', 'bar'
+        response = Typhoeus.post(
+          "#{@base_url}/accounts/login",
+          body: { data: { attributes: { email: @email, password: @password } }, type: 'accounts' },
+          headers: { 'Accept' => 'application/vnd.api+json' }
+        )
+
+        fail "Failed login" unless response.success?
+        data = JSON.parse(response.response_body)['data']
+
+        @auth_id    = data['id']
+        @auth_token = data['attributes']['authentication_token']
       end
 
       def get(resource, id = nil)
