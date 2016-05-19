@@ -25,7 +25,7 @@ module Placewise
 
       def get(resource, id = nil, params: { page: { size: 3 }, include: 'stores' })
         login unless @auth_id
-        unpack Typhoeus.get(url_for(resource), headers: { 'Accept' => 'application/vnd.api+json' }, params: sign(params))
+        unpack Typhoeus.get(url_for(resource, id), headers: { 'Accept' => 'application/vnd.api+json' }, params: sign(params))
       end
 
       private
