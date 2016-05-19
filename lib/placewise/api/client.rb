@@ -23,9 +23,13 @@ module Placewise
         @auth_token = data['attributes']['authentication_token']
       end
 
-      def get(resource, id = nil, params: { page: { size: 3 }, include: 'stores' })
+      def get(path, params = {})
         login unless @auth_id
-        unpack Typhoeus.get(url_for(resource, id), headers: { 'Accept' => 'application/vnd.api+json' }, params: sign(params))
+        params[:page] ||= {}
+        params[:page][:number] ||= 1
+        params[:page][:size]   ||= 25
+        unpack Typhoeus.get(url_for(path), headers: { 'Accept' => 'application/vnd.api+json' }, params: sign(params))
+        Placewise::Api.repo[path.split('/').first.to_sym]
       end
 
       private
@@ -60,7 +64,7 @@ module Placewise
         if response.success?
           json     = JSON.parse(response.response_body)
           data     = json['data']
-          included = json['included']
+          included = json['included'] || []
           if data.is_a?(Array)
             data.each { |d| Placewise::Api.repo[d['type'].to_sym] << model_for(d['type']).new(d) }
           else
