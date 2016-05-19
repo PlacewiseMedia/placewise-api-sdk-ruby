@@ -61,7 +61,13 @@ module Placewise
           json     = JSON.parse(response.response_body)
           data     = json['data']
           included = json['included']
-          data.each { |d| Placewise::Api.repo[d['type'].to_sym] << model_for(d['type']).new(d) }
+          if data.is_a?(Array)
+            data.each { |d| Placewise::Api.repo[d['type'].to_sym] << model_for(d['type']).new(d) }
+          else
+            Placewise::Api.repo[data['type'].to_sym] << model_for(data['type']).new(
+              data['id'], data['type'], data['attributes'], data['links'], data['relationships']
+            )
+          end
           included.each { |d| Placewise::Api.repo[d['type'].to_sym] << model_for(d['type']).new(d) }
         else
           fail "Something failed..."
